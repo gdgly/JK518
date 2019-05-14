@@ -742,6 +742,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\User\FILESYS\FILESYS.c</FilePath>
             </File>
+            <File>
+              <FileName>adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\adc\adc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -59,6 +59,7 @@ extern u8 press;
 extern u8 spt_page;
 extern u8 cor_page;
 extern char data[17];
+extern vu8 Range;//当前量程
 
 void page_home(void);
 void page_set(void);

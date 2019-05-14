@@ -34,8 +34,10 @@
 #include "./ch376/ch376.h"
 #include "touchscreen.h"
 #include "./FILESYS/FILESYS.h"
+#include "./adc/adc.h"
 #include <string.h>
-
+#include <math.h>
+#include <stdbool.h> 
 /** @defgroup APP_HID_Private_Variables
   * @{
   */ 
@@ -43,6 +45,8 @@
 
 
 void UARTRECHANDLE(void);
+void Test_Process(void);
+u8 DispBuf[DISP_MAX_LEN];//显示缓冲区定义
 u8 usbbuf[0x40];
 u8 usbsendbuf[0x40];
 u8 savedata[80];
@@ -58,8 +62,19 @@ u8 usbstatus = UNKNOWN;
 u16 watch;
 u16 ureadcrc;
 u8 *ucrc;
+vu16 Range_value;
 extern u8 uartflag;
 //u8 p1,p2,p3,p4,p5,p6,p7,p8;
+const u8 send_dot[]={2,2,4,3,2,4,3,2,4,3,2};
+const u8 Send_uint[]={0,0,1,1,1,2,2,2,3,3,3};
+Test_ValueTypedef Datacov(float value,u8 range)
+{
+    Test_ValueTypedef midvalue;
+    midvalue.res=value;
+    midvalue.dot=send_dot[range];
+    midvalue.uint=Send_uint[range];
+    return midvalue;
+}
 
 
 #ifdef USB_OTG_HS_INTERNAL_DMA_ENABLED
@@ -68,7 +83,13 @@ extern u8 uartflag;
   #endif
 #endif /* USB_OTG_HS_INTERNAL_DMA_ENABLED */
 __ALIGN_BEGIN USB_OTG_CORE_HANDLE  USB_OTG_dev __ALIGN_END;
-
+const u8 Test_Uint[][4]=
+{
+    {"mΩ"},
+    {" Ω"},
+    {"kΩ"},
+    {"MΩ"},
+};
 
 union 
 {
@@ -222,7 +243,7 @@ float ch_temp[40];
   */
 
 int main(void)
-		{
+{
 	static u8 powerstat;
 //	uint8_t  buf[0x40];
 //	static u8 ledstat;
@@ -235,7 +256,7 @@ int main(void)
 	static u8 dispflag=0;
 	static u32 dispcnt=0,xx;
 	u32 j = 0;
-			u8 strsum[8]="000.000";
+	u8 strsum[8]="000.000";
 	KEYLOCK = 0;
 
 		/*初始化SDRAM模块*/
@@ -247,9 +268,10 @@ int main(void)
     LTDC_Cmd(ENABLE);
 	LCD_SetLayer(LCD_FOREGROUND_LAYER);
 	LCD_Clear(LCD_COLOR_BLACK);
-	
+	ADC_GPIO_CONFIG();
 	SysTick_Init();
 	Delay(500);
+	
 	/* LED 端口初始化 */
 //	LED_GPIO_Config();	 
 	power_on();
@@ -312,10 +334,12 @@ int main(void)
 	/* 等待 RTC APB 寄存器同步 */
 	RTC_WaitForSynchro();
 	}
-
-	USBD_Init(&USB_OTG_dev,USB_OTG_HS_CORE_ID,
-           &USR_desc,&USBD_HID_cb,&USR_cb);
-		/* 获取 SPI Flash ID */
+	
+	INIT_ADS1216(0,0,0x01);//AD初始化
+	Range_out(Range);
+//	USBD_Init(&USB_OTG_dev,USB_OTG_HS_CORE_ID,
+//           &USR_desc,&USBD_HID_cb,&USR_cb);
+//		/* 获取 SPI Flash ID */
 	FlashID = SPI_FLASH_ReadID();
 	if (FlashID == sFLASH_ID) 
 	{
@@ -325,7 +349,7 @@ int main(void)
 	}
 //	watch = CRC16(test,9);
 //	
-//	watch = sizeof(TempHLimits);
+	watch = sizeof(TempHLimits);
 	for(j=0;j<50000;j++)
 	Delay(1000);
 	for(j=0;j<16;j++)
@@ -333,6 +357,7 @@ int main(void)
 	memset(newname,0,10);
 	
 uartflag = 1;
+	
 	while(1)
 	{
 //		LED1_ON;
@@ -357,16 +382,16 @@ uartflag = 1;
 //					TouchHandle(XCOOR,YCOOR);
 //				}
 //			}
-			if(page_flag != poweron)
-			{
-				if(usavecount == 100)
-				{
-					udisk_scan();
-					usavecount = 0;
-				}
-				else
-					usavecount++;
-			}
+//			if(page_flag != poweron)
+//			{
+//				if(usavecount == 100)
+//				{
+//					udisk_scan();
+//					usavecount = 0;
+//				}
+//				else
+//					usavecount++;
+//			}
 	//		Touch_Scan();
 			DrawBattery(battery);
 			
@@ -380,8 +405,9 @@ uartflag = 1;
 			if(dispflag==0&&dispcnt>=300)
 			{
 				page_measure(xx);
-        dispflag=1;
+				dispflag=1;
 			}
+			Test_Process();
 //			xx++;
 //				if(xx>999999)
 //					xx=1;
@@ -399,8 +425,186 @@ uartflag = 1;
 	
 	}
 }
+//==========================================================
+//函数名称：Hex_Format
+//函数功能：格式化整数值到DispBuf
+//入口参数：整数，小数位数，数值位数，显示零
+//出口参数：无
+//创建日期：2014.12.15
+//修改日期：2015.01.14 13:12
+//备注说明：dot=0-XXXXX XXXX.X XXX.XX XX.XXX X.XXXX-Dot=4
+//注意事项：最多5位数
+//==========================================================
+void Hex_Format(u16 dat, u8 Dot, u8 len, bool dispzero)
+{
+	u8 i,j;
+
+	if(len>5)len=5;//最大长度5
+	if(len==0)len=1;
+	if(Dot>4)Dot=4;//最大小数点4
+	if(Dot>len)Dot=len;
+
+	for(i=0;i<sizeof(DispBuf);i++)	//清空缓冲区
+		DispBuf[i]=' ';
+
+	for(i=len;i>0;i--)	//数制转换
+	{
+		DispBuf[i-1] = dat%10 + '0';//转为ASCII
+		dat/=10;
+	}
+
+	if(Dot)//有小数点
+	{
+		j=len;
+		i=Dot;//取小数点位置
+		while(i--)
+		{
+			DispBuf[j]=DispBuf[j-1];
+			j--;
+		}
+		DispBuf[j]='.';//加入小数点
+	}
+
+	if(dispzero==FALSE)//不显示无效零
+	{
+		for(i=0;i<(len-1);i++)
+		{
+			if((DispBuf[i]=='0')&&(DispBuf[i+1]!='.'))
+				DispBuf[i]=' ';
+			else
+				break;
+		}
+	}
+	if(Dot)len++;
+	for(i=len;i<sizeof(DispBuf);i++)//末尾补结束符'\0'
+			DispBuf[i]=0;
+	}
+
+void Test_Process(void)
+{
+static s32 kx,Adx[8]={0};
+s16 RX;
+s32 k,kn;
+	static u8 mn=0;
+		//读取A/D值
+u8  Str[10]={0},m;
+		k=	kn=AD_Convert_read();	//	Read_Ad();//读取AD值Read_Channel
+ 
+if(Ad_over)
+{
 
 
+							Ad_over=0;
+							if(!Savedata.adj[Range])
+								Savedata.adj[Range]=10000;
+							
+							Savedata.adj[Range]=2215;
+							Savedata.Zer0[Range]=00;
+											 
+							RX=Adx[mn]=10*(kn-Savedata.Zer0[Range])/Savedata.adj[Range];
+
+							if(RX<0)
+								RX=-RX;
+
+							Range_adj(RX);	//Range_value换挡 比较	
+							if(mn==1)
+							{//-<-<-
+						/*		if(Adx[0]>Adx[1])
+								{kn=Adx[0];
+									Adx[0]=Adx[1];
+									Adx[1]=kn;
+								}
+								if(Adx[1]>Adx[2])
+								{kn=Adx[1];
+									Adx[1]=Adx[2];
+									Adx[2]=kn;
+								}
+								if(Adx[2]>Adx[3])
+								{kn=Adx[2];
+									Adx[2]=Adx[3];
+									Adx[3]=kn;
+								}
+								if(Adx[3]>Adx[4])
+								{kn=Adx[3];
+									Adx[3]=Adx[4];
+									Adx[4]=kn;
+								}
+								if(Adx[4]>Adx[5])
+								{kn=Adx[4];
+									Adx[4]=Adx[5];
+									Adx[5]=kn;
+								}
+								if(Adx[5]>Adx[6])
+								{kn=Adx[5];
+									Adx[5]=Adx[6];
+									Adx[6]=kn;
+								}
+								if(Adx[6]>Adx[7])
+								{kn=Adx[6];
+									Adx[6]=Adx[7];
+									Adx[7]=kn;
+								}*/
+
+						//		kx=Adx[2]+Adx[3]+Adx[4]+Adx[5];
+							kx=Adx[0]+Adx[1];//++Adx[6]+Adx[7]
+							}
+							mn++;
+							if(mn>1)				mn=0;
+
+							Res_count.r=RX;//kx>>1;
+                if(Res_count.r<=0)      Range_value=0;
+                else                    Range_value=Res_count.r;
+               
+                if(Res_count.r<0)
+                {
+                    Res_count.r=-Res_count.r;
+                    Test_Value.polar=1;
+                }
+                else
+                    Test_Value.polar=0;
+                    Test_Value=Datacov(Res_count.r,Range);
+
+            //if(Jk516save.Compset.comp)//分选
+          //      if(Savedata.comp)//分选
+						//		F_Fail=Comp_choice();
+//            Beep_Out(F_Fail);//声讯报警
+//            Disp_Testvalue(Test_Value);
+				Hex_Format(Test_Value.res , Test_Value.dot , 5, FALSE);
+//				LCD_DispString_EN_CH( TESTVALUE_X, TESTVALUE_Y, DispBuf );
+				LCD_Lstring_Ex(24,265,72,120,DispBuf,0);
+				LCD_DispString_EN_CH( 100, 240, Test_Uint[Test_Value.uint] );
+//						if(k<0)
+//							
+//								k=-k;
+//								for(m=8;m>0;m--)
+//								{Str[m-1]=k%10+'0';
+//								k/=10;}
+//					//			Str[0]=mn+'0';
+
+//LCD_DispString_EN_CH(50, 10,Str);
+////LCD_DispString_EN_CH(								
+//															
+//								for(m=8;m>0;m--)
+//								{Str[m-1]=RX%10+'0';
+//								RX/=10;}
+//Str[0]='k';
+//Str[1]='x';
+//LCD_DispString_EN_CH(120, 10,Str);
+
+//								for(m=8;m>0;m--)
+//								{Str[m-1]=' ';}
+
+//								k=va_4094[Range];
+//								for(m=3;m>0;m--)
+//								{Str[m-1]=k%10+'0';
+//								k/=10;}
+//				LCD_DispString_EN_CH(190, 10,Str);	
+//					LCD_Lstring_Ex(24,265,72,120,Str,0);
+					}
+	//	Uart_Process();//串口处理
+   //     key=Key_Read_WithTimeOut(TICKS_PER_SEC_SOFTTIMER/10);//等待按键(100*10ms/10=100ms)
+
+}
 
 
 /*GERNERAL CODES*/

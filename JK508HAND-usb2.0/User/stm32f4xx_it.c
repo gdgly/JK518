@@ -176,7 +176,9 @@ void PendSV_Handler(void)
   * @retval None
   */
 void SysTick_Handler(void)
-{}
+{
+	TimingDelay_Decrement();
+}
 
 /******************************************************************************/
 /*                 STM32F4xx Peripherals Interrupt Handlers                   */

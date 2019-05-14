@@ -69,3 +69,6 @@
 ..\..\output\main.o: ..\..\User\touchscreen.h
 ..\..\output\main.o: ..\..\User\./FILESYS/FILESYS.h
 ..\..\output\main.o: ..\..\User\./ch376/ch376.h
+..\..\output\main.o: ..\..\User\./adc/adc.h
+..\..\output\main.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
+..\..\output\main.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h

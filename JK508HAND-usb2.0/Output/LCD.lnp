@@ -57,6 +57,7 @@
 "..\..\output\touchscreen.o"
 "..\..\output\ch376.o"
 "..\..\output\filesys.o"
+"..\..\output\adc.o"
 "..\..\output\system.o"
 "..\..\output\settings.o"
 "..\..\output\separation.o"

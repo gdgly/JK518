@@ -11,6 +11,7 @@ void SysTick_Init(void);
 
 
 //提供给应用程序调用
-void Delay_ms(__IO u32 nTime);
+void delay_us(__IO u32 nTime);
+#define delay_ms(x) delay_us(100*x)	 //单位ms
 
 #endif /* __SYSTICK_H */
