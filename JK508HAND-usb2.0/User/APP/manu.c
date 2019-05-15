@@ -122,8 +122,8 @@ void page_measure( u32 rm)
 	LCD_DisplayStringLine_L(285,580,"GD");
 	LCD_SetTextColor(LCD_COLOR_YELLOW);
 	//LCD_DisplayStringLine_L(335,585,"K");
-	LCD_DisplayStringLine_L(335,575,"m");
-	LCD_DisplayStringLine_L(340,605,"#");
+//	DISP_TEMP_L(340,570,"m",0);
+	DISP_TEMP_L(340,605,"#",0);
 
 
 	if(LANG == chs)

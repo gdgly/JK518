@@ -83,12 +83,11 @@ Test_ValueTypedef Datacov(float value,u8 range)
   #endif
 #endif /* USB_OTG_HS_INTERNAL_DMA_ENABLED */
 __ALIGN_BEGIN USB_OTG_CORE_HANDLE  USB_OTG_dev __ALIGN_END;
-const u8 Test_Uint[][4]=
+u8 Test_Uint[][3]=
 {
-    {"mΩ"},
-    {" Ω"},
-    {"kΩ"},
-    {"MΩ"},
+    {"m"},
+    {" "},
+    {"k"},
 };
 
 union 
@@ -471,7 +470,7 @@ void Hex_Format(u16 dat, u8 Dot, u8 len, bool dispzero)
 		{
 			if((DispBuf[i]=='0')&&(DispBuf[i+1]!='.'))
 				DispBuf[i]=' ';
-			else
+			else	
 				break;
 		}
 	}
@@ -490,120 +489,93 @@ s32 k,kn;
 u8  Str[10]={0},m;
 		k=	kn=AD_Convert_read();	//	Read_Ad();//读取AD值Read_Channel
  
-if(Ad_over)
-{
+	if(Ad_over)
+	{
+		Ad_over=0;
+		if(!Savedata.adj[Range])
+			Savedata.adj[Range]=10000;
+		
+		Savedata.adj[Range]=2215;
+		Savedata.Zer0[Range]=00;
+						 
+		RX=Adx[mn]=10*(kn-Savedata.Zer0[Range])/Savedata.adj[Range];
 
+		if(RX<0)
+			RX=-RX;
 
-							Ad_over=0;
-							if(!Savedata.adj[Range])
-								Savedata.adj[Range]=10000;
-							
-							Savedata.adj[Range]=2215;
-							Savedata.Zer0[Range]=00;
-											 
-							RX=Adx[mn]=10*(kn-Savedata.Zer0[Range])/Savedata.adj[Range];
+		Range_adj(RX);	//Range_value换挡 比较	
+		if(mn==1)
+		{//-<-<-
+	/*		if(Adx[0]>Adx[1])
+			{kn=Adx[0];
+				Adx[0]=Adx[1];
+				Adx[1]=kn;
+			}
+			if(Adx[1]>Adx[2])
+			{kn=Adx[1];
+				Adx[1]=Adx[2];
+				Adx[2]=kn;
+			}
+			if(Adx[2]>Adx[3])
+			{kn=Adx[2];
+				Adx[2]=Adx[3];
+				Adx[3]=kn;
+			}
+			if(Adx[3]>Adx[4])
+			{kn=Adx[3];
+				Adx[3]=Adx[4];
+				Adx[4]=kn;
+			}
+			if(Adx[4]>Adx[5])
+			{kn=Adx[4];
+				Adx[4]=Adx[5];
+				Adx[5]=kn;
+			}
+			if(Adx[5]>Adx[6])
+			{kn=Adx[5];
+				Adx[5]=Adx[6];
+				Adx[6]=kn;
+			}
+			if(Adx[6]>Adx[7])
+			{kn=Adx[6];
+				Adx[6]=Adx[7];
+				Adx[7]=kn;
+			}*/
 
-							if(RX<0)
-								RX=-RX;
+	//		kx=Adx[2]+Adx[3]+Adx[4]+Adx[5];
+		kx=Adx[0]+Adx[1];//++Adx[6]+Adx[7]
+		}
+		mn++;
+		if(mn>1)				mn=0;
 
-							Range_adj(RX);	//Range_value换挡 比较	
-							if(mn==1)
-							{//-<-<-
-						/*		if(Adx[0]>Adx[1])
-								{kn=Adx[0];
-									Adx[0]=Adx[1];
-									Adx[1]=kn;
-								}
-								if(Adx[1]>Adx[2])
-								{kn=Adx[1];
-									Adx[1]=Adx[2];
-									Adx[2]=kn;
-								}
-								if(Adx[2]>Adx[3])
-								{kn=Adx[2];
-									Adx[2]=Adx[3];
-									Adx[3]=kn;
-								}
-								if(Adx[3]>Adx[4])
-								{kn=Adx[3];
-									Adx[3]=Adx[4];
-									Adx[4]=kn;
-								}
-								if(Adx[4]>Adx[5])
-								{kn=Adx[4];
-									Adx[4]=Adx[5];
-									Adx[5]=kn;
-								}
-								if(Adx[5]>Adx[6])
-								{kn=Adx[5];
-									Adx[5]=Adx[6];
-									Adx[6]=kn;
-								}
-								if(Adx[6]>Adx[7])
-								{kn=Adx[6];
-									Adx[6]=Adx[7];
-									Adx[7]=kn;
-								}*/
+		Res_count.r=RX;//kx>>1;
+		if(Res_count.r<=0)      Range_value=0;
+		else                    Range_value=Res_count.r;
+	   
+		if(Res_count.r<0)
+		{
+			Res_count.r=-Res_count.r;
+			Test_Value.polar=1;
+		}
+		else
+			Test_Value.polar=0;
+			Test_Value=Datacov(Res_count.r,Range);
 
-						//		kx=Adx[2]+Adx[3]+Adx[4]+Adx[5];
-							kx=Adx[0]+Adx[1];//++Adx[6]+Adx[7]
-							}
-							mn++;
-							if(mn>1)				mn=0;
-
-							Res_count.r=RX;//kx>>1;
-                if(Res_count.r<=0)      Range_value=0;
-                else                    Range_value=Res_count.r;
-               
-                if(Res_count.r<0)
-                {
-                    Res_count.r=-Res_count.r;
-                    Test_Value.polar=1;
-                }
-                else
-                    Test_Value.polar=0;
-                    Test_Value=Datacov(Res_count.r,Range);
-
-            //if(Jk516save.Compset.comp)//分选
-          //      if(Savedata.comp)//分选
-						//		F_Fail=Comp_choice();
+	//if(Jk516save.Compset.comp)//分选
+  //      if(Savedata.comp)//分选
+				//		F_Fail=Comp_choice();
 //            Beep_Out(F_Fail);//声讯报警
 //            Disp_Testvalue(Test_Value);
-				Hex_Format(Test_Value.res , Test_Value.dot , 5, FALSE);
+		Hex_Format(Test_Value.res , Test_Value.dot , 5, FALSE);
 //				LCD_DispString_EN_CH( TESTVALUE_X, TESTVALUE_Y, DispBuf );
-				LCD_Lstring_Ex(24,265,72,120,DispBuf,0);
-				LCD_DispString_EN_CH( 100, 240, Test_Uint[Test_Value.uint] );
-//						if(k<0)
-//							
-//								k=-k;
-//								for(m=8;m>0;m--)
-//								{Str[m-1]=k%10+'0';
-//								k/=10;}
-//					//			Str[0]=mn+'0';
+		LCD_Lstring_Ex(24,265,72,120,DispBuf,0);
+		LCD_SetColors(LCD_COLOR_YELLOW,LCD_COLOR_BACK);
+		DISP_TEMP_L(340,581,Test_Uint[Test_Value.uint],0);
+					
 
-//LCD_DispString_EN_CH(50, 10,Str);
-////LCD_DispString_EN_CH(								
-//															
-//								for(m=8;m>0;m--)
-//								{Str[m-1]=RX%10+'0';
-//								RX/=10;}
-//Str[0]='k';
-//Str[1]='x';
-//LCD_DispString_EN_CH(120, 10,Str);
-
-//								for(m=8;m>0;m--)
-//								{Str[m-1]=' ';}
-
-//								k=va_4094[Range];
-//								for(m=3;m>0;m--)
-//								{Str[m-1]=k%10+'0';
-//								k/=10;}
-//				LCD_DispString_EN_CH(190, 10,Str);	
-//					LCD_Lstring_Ex(24,265,72,120,Str,0);
-					}
+	}
 	//	Uart_Process();//串口处理
    //     key=Key_Read_WithTimeOut(TICKS_PER_SEC_SOFTTIMER/10);//等待按键(100*10ms/10=100ms)
-
 }
 
 

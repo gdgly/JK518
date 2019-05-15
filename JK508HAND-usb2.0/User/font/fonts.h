@@ -124,6 +124,7 @@ extern sFONT FontC_8x20B;
 extern sFONT FontC_16x24;
 extern sFONT FontC_16x32;
 extern sFONT FontT_24x40;
+extern sFONT FontT_24x35;
 extern sFONT FontT_24x34;
 extern sFONT FontT_16x28;
 extern sFONT FontT_16x24;

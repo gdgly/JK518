@@ -1567,7 +1567,7 @@ void DISP_TEMP_L(uint16_t x,uint16_t y, uint8_t *ptr,u8 sw)
 	  {
 			if(*ptr < 0x80)
 				{
-					LCD_SetFont(&FontT_24x40);
+					LCD_SetFont(&FontT_24x35);
 					/* Display one character on LCD */
 					LCD_DisplayChar_48(LINE(x), refcolumn, *ptr);
 					/* Decrement the column position by width */
