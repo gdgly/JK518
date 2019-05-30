@@ -178,7 +178,7 @@ void Disp_main(void)
 	}
 	if(RANGE > 9) RANGE = 0;
 	u8range=RANGE;
-	LCD_DisplayStringLine(90,150,rangenum[u8range]);
+	LCD_DisplayStringLine(90,150,rangenum[Range]);
 	LCD_DisplayStringLine(90,198,rangename[u8range]);
 	
 	if(op_flag == set_mode)

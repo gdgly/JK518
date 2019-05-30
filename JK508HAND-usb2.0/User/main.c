@@ -571,7 +571,7 @@ u8  Str[10]={0},m;
 		LCD_Lstring_Ex(24,265,72,120,DispBuf,0);
 		LCD_SetColors(LCD_COLOR_YELLOW,LCD_COLOR_BACK);
 		DISP_TEMP_L(340,581,Test_Uint[Test_Value.uint],0);
-					
+		Disp_main();			
 
 	}
 	//	Uart_Process();//´®¿Ú´¦Àí

@@ -27,32 +27,14 @@ Project File Date:  05/14/2019
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'D:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'LCD'
-compiling main.c...
-..\..\User\main.c(337): warning:  #223-D: function "INIT_ADS1216" declared implicitly
-        INIT_ADS1216(0,0,0x01);//AD≥ı ºªØ
-..\..\User\main.c(246): warning:  #550-D: variable "powerstat"  was set but never used
-        static u8 powerstat;
-..\..\User\main.c(253): warning:  #550-D: variable "urecount"  was set but never used
-        static u8 urecount;
-..\..\User\main.c(254): warning:  #177-D: variable "usavecount"  was declared but never referenced
-        static u16 usavecount;
-..\..\User\main.c(258): warning:  #177-D: variable "strsum"  was declared but never referenced
-        u8 strsum[8]="000.000";
-..\..\User\main.c(484): warning:  #550-D: variable "kx"  was set but never used
-  static s32 kx,Adx[8]={0};
-..\..\User\main.c(486): warning:  #550-D: variable "k"  was set but never used
-  s32 k,kn;
-..\..\User\main.c(489): warning:  #177-D: variable "Str"  was declared but never referenced
-  u8  Str[10]={0},m;
-..\..\User\main.c(489): warning:  #177-D: variable "m"  was declared but never referenced
-  u8  Str[10]={0},m;
-..\..\User\main.c(1340): warning:  #177-D: variable "offflag"  was declared but never referenced
-        static u8 offflag;
-..\..\User\main.c: 10 warnings, 0 errors
+compiling fonts.c...
+..\..\User\font\fonts.c(17242): warning:  #550-D: variable "pos"  was set but never used
+      unsigned int pos;
+..\..\User\font\fonts.c: 1 warning, 0 errors
 linking...
-Program Size: Code=94798 RO-data=330878 RW-data=792 ZI-data=28584  
+Program Size: Code=94814 RO-data=330878 RW-data=792 ZI-data=28584  
 FromELF: creating hex file...
-"..\..\Output\LCD.axf" - 0 Error(s), 10 Warning(s).
+"..\..\Output\LCD.axf" - 0 Error(s), 1 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -66,7 +48,7 @@ Package Vendor: Keil
   D:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.12.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include
 
 <h2>Collection of Component Files used:</h2>
-Build Time Elapsed:  00:00:02
+Build Time Elapsed:  00:00:01
 </pre>
 </body>
 </html>
